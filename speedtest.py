@@ -140,12 +140,12 @@ def main():
 	# Path information to the TWC Speedtest server
 	twc_host = "24.25.5.24"
 	twc_path_late = "/speedtest/upload.php"
-	twc_path_thr = "/speedtest/random2000x2000.jpg"
+	twc_path_thr = "/speedtest/random500x500.jpg"
 
 	# Path information to the Tranquil Hosting Speedtest Server
 	tran_host = "speedtest.ral.tqhosting.com"
 	tran_path_late = "/speedtest/upload.php"
-	tran_path_thr = "/speedtest/random4000x4000.jpg"
+	tran_path_thr = "/speedtest/random500x500.jpg"
 
 	TIMEOUT = 10
 	TEST_LENGTH = 100
