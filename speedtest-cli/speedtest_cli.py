@@ -29,6 +29,7 @@ import signal
 import socket
 import timeit
 import threading
+from xml.dom import minidom
 
 # Used for bound_interface
 socket_socket = socket.socket
@@ -342,16 +343,31 @@ def closestServers(client, all=False):
     distance
     """
 
-    #uh = open("/Users/JamesLMartin/Documents/net-score/speedtest-cli/NCservers.php")
+    # serverFile = open("/Users/JamesLMartin/Documents/net-score/speedtest-cli/NCservers.php")
+    # serversxml = []
+    # xmlString = ""
+    # for line in serverFile:
+    #     xmlString = xmlString + line
+    # xmlString = xmlString + "\n"
+    # serverFile.closed
+    # serversxml = [xmlString, '']
+
+    # print xmlString
+    # print serversxml
+    
     uh = urlopen('http://www.speedtest.net/speedtest-servers-static.php')
     serversxml = []
     while 1:
         serversxml.append(uh.read(10240))
         if len(serversxml[-1]) == 0:
             break
+    if int(uh.code) != 200:
+        return None
     uh.close()
-    for line in serversxml:
-        print line
+
+    for x in xrange(len(serversxml)):
+        print serversxml[x], ", type: ", type(serversxml[x])
+
     try:
         try:
             root = ET.fromstring(''.encode().join(serversxml))
@@ -390,6 +406,8 @@ def closestServers(client, all=False):
         break
 
     del servers
+    #print closest
+    #print len(closest)
     return closest
 
 
@@ -514,7 +532,7 @@ def speedtest():
 
     if not args.simple:
         print_('Retrieving speedtest.net server list...')
-    if args.list: #or args.server:
+    if args.list or args.server:
         servers = closestServers(config['client'], True)
         if args.list:
             serverList = []
