@@ -343,30 +343,26 @@ def closestServers(client, all=False):
     distance
     """
 
-    # serverFile = open("/Users/JamesLMartin/Documents/net-score/speedtest-cli/NCservers.php")
-    # serversxml = []
-    # xmlString = ""
-    # for line in serverFile:
-    #     xmlString = xmlString + line
-    # xmlString = xmlString + "\n"
-    # serverFile.closed
-    # serversxml = [xmlString, '']
-
-    # print xmlString
-    # print serversxml
-    
-    uh = urlopen('http://www.speedtest.net/speedtest-servers-static.php')
+    serverFile = open("/Users/JamesLMartin/Documents/net-score/speedtest-cli/NCservers.php")
+    xmlString = ""
     serversxml = []
-    while 1:
-        serversxml.append(uh.read(10240))
-        if len(serversxml[-1]) == 0:
-            break
-    if int(uh.code) != 200:
-        return None
-    uh.close()
+    for line in serverFile:
+        xmlString = xmlString + line
+    xmlString = xmlString + "\n"
+    serversxml = [xmlString, '']
+    
+    # uh = urlopen('http://www.speedtest.net/speedtest-servers-static.php')
+    # serversxml = []
+    # while 1:
+    #     serversxml.append(uh.read(10240))
+    #     if len(serversxml[-1]) == 0:
+    #         break
+    # if int(uh.code) != 200:
+    #     return None
+    # uh.close()
 
-    for x in xrange(len(serversxml)):
-        print serversxml[x], ", type: ", type(serversxml[x])
+    # for x in xrange(len(serversxml)):
+    #     print serversxml[x], ", type: ", type(serversxml[x])
 
     try:
         try:
@@ -378,7 +374,10 @@ def closestServers(client, all=False):
     except SyntaxError:
         print_('Failed to parse list of speedtest.net servers')
         sys.exit(1)
+    
+    serverFile.closed
     servers = {}
+
     for server in elements:
         try:
             attrib = server.attrib
@@ -394,6 +393,9 @@ def closestServers(client, all=False):
     del root
     del serversxml
     del elements
+
+    # for entry in servers:
+    #     print entry, " NEXTELEMENT "
 
     closest = []
     for d in sorted(servers.keys()):
