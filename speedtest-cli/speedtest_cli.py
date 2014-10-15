@@ -351,19 +351,6 @@ def closestServers(client, all=False):
     xmlString = xmlString + "\n"
     serversxml = [xmlString, '']
     
-    # uh = urlopen('http://www.speedtest.net/speedtest-servers-static.php')
-    # serversxml = []
-    # while 1:
-    #     serversxml.append(uh.read(10240))
-    #     if len(serversxml[-1]) == 0:
-    #         break
-    # if int(uh.code) != 200:
-    #     return None
-    # uh.close()
-
-    # for x in xrange(len(serversxml)):
-    #     print serversxml[x], ", type: ", type(serversxml[x])
-
     try:
         try:
             root = ET.fromstring(''.encode().join(serversxml))
@@ -392,10 +379,7 @@ def closestServers(client, all=False):
             servers[d].append(attrib)
     del root
     del serversxml
-    del elements
-
-    # for entry in servers:
-    #     print entry, " NEXTELEMENT "
+    del element
 
     closest = []
     for d in sorted(servers.keys()):
@@ -408,8 +392,6 @@ def closestServers(client, all=False):
         break
 
     del servers
-    #print closest
-    #print len(closest)
     return closest
 
 

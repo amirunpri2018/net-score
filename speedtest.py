@@ -33,7 +33,10 @@ def speedtest(serverID):
 	output = p.stdout.read()
 	stats = output.split('\n')
 	#Pop empty string off end of list
-	stats.pop(3)
+	try:
+		stats.pop(3)
+	except:
+		print "Test failed."
 
 	counter = 0
 	for word in stats:
@@ -91,16 +94,20 @@ def timer_test(conn, PATH, N):
 def server_test(host, path_late, path_thr, to, test_length):
 	late_resource = "%s?to=%d&i=%d" % (path_late, time.time(), 2)
 	thr_resource = "%s?to=%d&i=%d" % (path_thr, time.time(), 2)
+
+	print "Latency resource: ", late_resource
+	print "Throughput resource: ", thr_resource
+
 	connA = httplib.HTTPConnection(host, timeout=to)
 	connB = httplib.HTTPConnection(host, timeout=to)
 
 	# Latency connection
-	connA.request("GET", late_resource, headers=header_list)
+	connA.request("GET", path_late, headers=header_list)
 	imgA = connA.getresponse().read()
 	sz_late = len(imgA)
 
 	# Throughput connection
-	connB.request("GET", thr_resource, headers=header_list)
+	connB.request("GET", path_thr, headers=header_list)
 	imgB = connB.getresponse().read()
 	sz_thr = len(imgB)
 
@@ -125,14 +132,28 @@ def server_test(host, path_late, path_thr, to, test_length):
 
 # main() -> executes specific tests
 def main():
-	HOST = "i1.ytimg.com"
-	PATH_LATE = "/i/augF6Vv2TDgBRvKVeSqyUg/1.jpg"
-	PATH_THR = "/i/pF_Dv5_lbIaAimjzSqUzWA/1.jpg"
+	# Path information for timer test to YouTube edge server
+	yt_host = "i1.ytimg.com"
+	yt_path_late = "/i/augF6Vv2TDgBRvKVeSqyUg/1.jpg"
+	yt_path_thr = "/i/pF_Dv5_lbIaAimjzSqUzWA/1.jpg"
+
+	# Path information to the TWC Speedtest server
+	twc_host = "24.25.5.24"
+	twc_path_late = "/speedtest/upload.php"
+	twc_path_thr = "/speedtest/random2000x2000.jpg"
+
+	# Path information to the Tranquil Hosting Speedtest Server
+	tran_host = "speedtest.ral.tqhosting.com"
+	tran_path_late = "/speedtest/upload.php"
+	tran_path_thr = "/speedtest/random4000x4000.jpg"
+
 	TIMEOUT = 10
 	TEST_LENGTH = 100
 
-	speedtest()
-	#youtube = server_test(HOST, PATH_LATE, PATH_THR, TIMEOUT, TEST_LENGTH)
+	#youtube = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
+	twc = server_test(twc_host, twc_path_late, twc_path_thr, TIMEOUT, TEST_LENGTH)
+
+	print twc
 	#write_to_log((datetime.datetime.now(),"YT",youtube[0],youtube[1]), "data/test_results.log")
 # END main()
 
