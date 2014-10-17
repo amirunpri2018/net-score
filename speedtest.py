@@ -18,7 +18,8 @@ import datetime
 import urllib2
 import httplib
 import time
-from subprocess import Popen, PIPE
+import os
+import subprocess
 
 header_list = {'User-Agent': 'python-%s.%s' % ('net-lib', '0.1')}
 
@@ -28,25 +29,35 @@ header_list = {'User-Agent': 'python-%s.%s' % ('net-lib', '0.1')}
 # 				(assigned by the speedtest-cli)
 def speedtest(serverID):
 	# NOTE: may need to specify absolute path to the speedtest-cli script
-	p = Popen(["speedtest-cli/speedtest-cli", "--server", serverID, "--simple"], stdout=PIPE, stderr=PIPE, stdin=PIPE)
+	# path_to_cli = "~/Documents/net-score/speedtest-cli/speedtest_cli.py"
+	# p = Popen([path_to_cli, "--server", serverID, "--simple"], stdout=PIPE, stderr=PIPE, stdin=PIPE)
+	
+	# output = "";
+	# with Popen(["python", "speedtest_cli.py", "--server", serverID], stdout=PIPE) as test:
+	# 	output = output + test.stdout.read()
+	full_path = os.path.abspath("speedtest-cli/speedtest_cli.py")
+	p = subprocess.Popen(["python", full_path, "--simple", "--server", serverID],stdout=subprocess.PIPE)
+	out, err = p.communicate()
 
-	output = p.stdout.read()
-	stats = output.split('\n')
-	#Pop empty string off end of list
-	try:
-		stats.pop(3)
-	except:
-		print "Test failed."
+	if not err == "None":
+		print err
+	else:
+		stats = out.split('\n')
+		#Pop empty string off end of list
+		try:
+			stats.pop(3)
+		except:
+			print "Test failed."
 
-	counter = 0
-	for word in stats:
-		word.split(':')
-		counter+=1
+		counter = 0
+		for word in stats:
+			word.split(':')
+			counter+=1
 
-	counter = 0
-	for word in stats:
-		stats[counter] = (word.split(' '))[1]
-		counter+=1
+		counter = 0
+		for word in stats:
+			stats[counter] = (word.split(' '))[1]
+			counter+=1
 
 	return (stats[0],stats[1],stats[2], datetime.datetime.now())
 
@@ -63,14 +74,14 @@ def write_to_log(data, fileName):
 		log.write('%s,%s,%s,%s\n' % (data[0],data[1],data[2],data[3]))
 		log.flush()
 
-# timer_test() -> Takes a connection and a path to a resource and records time
+# timer_test() -> Takes a connection and a path to a resource and records times
 # taken for the response
 # args:
 # 	conn: connection object, in the form of a HTTPConnection
 # 	PATH: path to a resource on the host
 # 	N: number of times to run the test to get averages
 def timer_test(conn, PATH, N):
-	late_times = list()
+	r_times = list()
 	for i in xrange(0, N):
 		start_wall = time.time()
 		resource = "%s?to=%d&i=%d" % (PATH, start_wall, i)
@@ -78,10 +89,10 @@ def timer_test(conn, PATH, N):
 		resp = conn.getresponse()
 		data = resp.read()
 		end_wall = time.time()
-		late_times.append(end_wall - start_wall)
+		r_times.append(end_wall - start_wall)
 		if resp.status < 200 or resp.status > 206:
 			print "NOT OK %d (%s)" % (resp.status, resource)
-	return late_times
+	return r_times
 
 # server_test() -> abstraction for calculating mean latency and throughput values for
 # a connection to a host
@@ -98,22 +109,21 @@ def server_test(host, path_late, path_thr, to, test_length):
 	print "Latency resource: ", late_resource
 	print "Throughput resource: ", thr_resource
 
-	connA = httplib.HTTPConnection(host, timeout=to)
-	connB = httplib.HTTPConnection(host, timeout=to)
+	conn = httplib.HTTPConnection(host, timeout=to)
 
 	# Latency connection
-	connA.request("GET", path_late, headers=header_list)
-	imgA = connA.getresponse().read()
+	conn.request("GET", path_late, headers=header_list)
+	imgA = conn.getresponse().read()
 	sz_late = len(imgA)
 
 	# Throughput connection
-	connB.request("GET", path_thr, headers=header_list)
-	imgB = connB.getresponse().read()
+	conn.request("GET", path_thr, headers=header_list)
+	imgB = conn.getresponse().read()
 	sz_thr = len(imgB)
 
 	# Grab times for each
-	late_times = timer_test(connA, path_late, test_length)
-	thr_times = timer_test(connB, path_thr, test_length)
+	late_times = timer_test(conn, path_late, test_length)
+	thr_times = timer_test(conn, path_thr, test_length)
 
 	# Calculate averaged RTT and size in bits
 	mean_rtt = sum(late_times) / len(late_times)
@@ -139,21 +149,31 @@ def main():
 
 	# Path information to the TWC Speedtest server
 	twc_host = "24.25.5.24"
-	twc_path_late = "/speedtest/upload.php"
+	twc_path_late = "/speedtest/latency.txt"
 	twc_path_thr = "/speedtest/random500x500.jpg"
 
 	# Path information to the Tranquil Hosting Speedtest Server
 	tran_host = "speedtest.ral.tqhosting.com"
-	tran_path_late = "/speedtest/upload.php"
+	tran_path_late = "/speedtest/latency.txt"
 	tran_path_thr = "/speedtest/random500x500.jpg"
 
 	TIMEOUT = 10
 	TEST_LENGTH = 100
 
-	#youtube = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
-	twc = server_test(twc_host, twc_path_late, twc_path_thr, TIMEOUT, TEST_LENGTH)
+	# youtube_timer = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
+	
+	# twc_timer = server_test(twc_host, twc_path_late, twc_path_thr, TIMEOUT, TEST_LENGTH)
+	# print twc_timer
+	twc_speed = speedtest("999");
+	#print twc_speed
 
-	print twc
+	# tran_timer = server_test(tran_host, tran_path_late, tran_path_thr, TIMEOUT, TEST_LENGTH)
+	# tran_speed = speedtest("544")
+
+	# print tran_timer
+	# print tran_speed
+
+	# print twc
 	#write_to_log((datetime.datetime.now(),"YT",youtube[0],youtube[1]), "data/test_results.log")
 # END main()
 
