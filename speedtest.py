@@ -29,25 +29,27 @@ header_list = {'User-Agent': 'python-%s.%s' % ('net-lib', '0.1')}
 # 				(assigned by the speedtest-cli)
 def speedtest(serverID):
 	# NOTE: may need to specify absolute path to the speedtest-cli script
-	# path_to_cli = "~/Documents/net-score/speedtest-cli/speedtest_cli.py"
-	# p = Popen([path_to_cli, "--server", serverID, "--simple"], stdout=PIPE, stderr=PIPE, stdin=PIPE)
-	
-	# output = "";
-	# with Popen(["python", "speedtest_cli.py", "--server", serverID], stdout=PIPE) as test:
-	# 	output = output + test.stdout.read()
 	full_path = os.path.abspath("speedtest-cli/speedtest_cli.py")
 	p = subprocess.Popen(["python", full_path, "--simple", "--server", serverID],stdout=subprocess.PIPE)
 	out, err = p.communicate()
 
-	if not err == "None":
-		print err
+	stats = []
+	ntuple = ()
+	if err is not None:
+		print "Test failed, error returned: ", err
+		ntuple = (err)
 	else:
 		stats = out.split('\n')
-		#Pop empty string off end of list
+
+		# Pop empty string off end of list
+		# If this fails, the test did not return 3 values
+		# This should be caught above, but if not 
 		try:
 			stats.pop(3)
 		except:
 			print "Test failed."
+			ntuple = (err)
+			return ntuple
 
 		counter = 0
 		for word in stats:
@@ -59,7 +61,10 @@ def speedtest(serverID):
 			stats[counter] = (word.split(' '))[1]
 			counter+=1
 
-	return (stats[0],stats[1],stats[2], datetime.datetime.now())
+		# Latency, Down, Up
+		ntuple = (stats[0],stats[1],stats[2])
+
+	return ntuple
 
 # write_to_log() -> Writes to a specific log file
 # args:
@@ -70,8 +75,15 @@ def write_to_log(data, fileName):
 	# TIMESTAMP, TEST_ID, LATENCY, THROUGHPUT
 	# Write to log file
 	# May need to specify absolute path to log file as well!
+
+	logString = ""
+	for i in xrange(len(data):
+		if i not == (len(data) - 1):
+			logString = logString + data[i] + ","
+		else:
+			logString = logString + data[i] + "\n"
 	with open(fileName, "a") as log:
-		log.write('%s,%s,%s,%s\n' % (data[0],data[1],data[2],data[3]))
+		log.write(logString)
 		log.flush()
 
 # timer_test() -> Takes a connection and a path to a resource and records times
@@ -105,9 +117,6 @@ def timer_test(conn, PATH, N):
 def server_test(host, path_late, path_thr, to, test_length):
 	late_resource = "%s?to=%d&i=%d" % (path_late, time.time(), 2)
 	thr_resource = "%s?to=%d&i=%d" % (path_thr, time.time(), 2)
-
-	print "Latency resource: ", late_resource
-	print "Throughput resource: ", thr_resource
 
 	conn = httplib.HTTPConnection(host, timeout=to)
 
@@ -160,21 +169,38 @@ def main():
 	TIMEOUT = 10
 	TEST_LENGTH = 100
 
-	# youtube_timer = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
+	# "Net-score" feather test
+	youtube_timer = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
 	
-	# twc_timer = server_test(twc_host, twc_path_late, twc_path_thr, TIMEOUT, TEST_LENGTH)
-	# print twc_timer
+	# TWC tests, first using "net-score" feather test, then using Speedtest CLI
+	twc_timer = server_test(twc_host, twc_path_late, twc_path_thr, TIMEOUT, TEST_LENGTH)
 	twc_speed = speedtest("999");
-	#print twc_speed
 
-	# tran_timer = server_test(tran_host, tran_path_late, tran_path_thr, TIMEOUT, TEST_LENGTH)
-	# tran_speed = speedtest("544")
+	# Tranquil hosting tests, first using "net-score" feather test, then using Speedtest CLI
+	tran_timer = server_test(tran_host, tran_path_late, tran_path_thr, TIMEOUT, TEST_LENGTH)
+	tran_speed = speedtest("544")
 
-	# print tran_timer
-	# print tran_speed
-
-	# print twc
-	#write_to_log((datetime.datetime.now(),"YT",youtube[0],youtube[1]), "data/test_results.log")
+	# Generate data to be written to CSV file
+	timestamp = time.time()
+	dataString = ( datetime.datetime.now(), # Timestamp for entire test
+		       	"YT" + str(timestamp), # YouTube server test ID ("net-score" test)
+		        youtube_timer[0], # Latency
+		        youtube_timer[1], # Throughput
+		        "TWC_timer" + str(timestamp), # TWC server test ID ("net-score" test)
+		        twc_timer[0], # Latency
+		        twc_timer[1], # Throughput
+		        "TWC_speed" + str(timestamp), # TWC speedtest-cli test ID
+		        twc_speed[0], # Latency
+		        twc_speed[1], # Download speed
+		        twc_speed[2], # Upload speed
+		        "Tran_timer" + str(timestamp), # Tranquil server test ID ("net-score" test)
+		        tran_timer[0], # Latency
+		        tran_timer[1], # Throughput
+		        "Tran_speed" + str(timestamp), # Tranquil speedtest-cli test ID
+		        tran_speed[0], # Latency
+		        tran_speed[1], # Download speed
+		        tran_speed[2] )# Upload speed
+	print dataString
 # END main()
 
 if __name__ == "__main__":
