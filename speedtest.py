@@ -77,12 +77,12 @@ def write_to_log(data, fileName):
 	# May need to specify absolute path to log file as well!
 
 	logString = ""
-	for i in xrange(len(data):
-		if i not == (len(data) - 1):
-			logString = logString + data[i] + ","
+	for i in xrange(len(data)):
+		if not i == (len(data) - 1):
+			logString = logString + str(data[i]) + ","
 		else:
-			logString = logString + data[i] + "\n"
-	with open(fileName, "a") as log:
+			logString = logString + str(data[i]) + "\n"
+	with open(fileName, "w") as log:
 		log.write(logString)
 		log.flush()
 
@@ -182,7 +182,7 @@ def main():
 
 	# Generate data to be written to CSV file
 	timestamp = time.time()
-	dataString = ( datetime.datetime.now(), # Timestamp for entire test
+	dataString = ( datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), # Timestamp for entire test
 		       	"YT" + str(timestamp), # YouTube server test ID ("net-score" test)
 		        youtube_timer[0], # Latency
 		        youtube_timer[1], # Throughput
@@ -200,7 +200,11 @@ def main():
 		        tran_speed[0], # Latency
 		        tran_speed[1], # Download speed
 		        tran_speed[2] )# Upload speed
-	print dataString
+	#log_name = "data/" + str(timestamp).split('.')[0] + "_log.txt" # Log file with timestamp
+	log_name = "data/results_log.csv"
+	log_file = os.path.abspath(log_name)
+	write_to_log(dataString, log_file)
+
 # END main()
 
 if __name__ == "__main__":

@@ -343,7 +343,9 @@ def closestServers(client, all=False):
     distance
     """
 
-    serverFile = open("/Users/JamesLMartin/Documents/net-score/speedtest-cli/NCservers.php")
+    #serverFile = open("/Users/JamesLMartin/Documents/net-score/speedtest-cli/NCservers.php")
+    abs_path = os.path.abspath("speedtest-cli/NCServers.php")
+    serverFile = open(abs_path)
     xmlString = ""
     serversxml = []
     for line in serverFile:
