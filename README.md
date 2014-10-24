@@ -6,3 +6,5 @@ Net-score is a new way of rating broadband connections. Our measurement platform
 
 This repository is for data analysis and a variety of scripts running to evaluate the measurement platform.
 Visit [net-score.org](http://www.net-score.org) for more information.
+
+Also visit [my CS homepage](http://cs.unc.edu/~jamesml) for data visualizations.
