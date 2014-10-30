@@ -170,15 +170,35 @@ def main():
 	TEST_LENGTH = 100
 
 	# "Net-score" feather test
-	youtube_timer = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
-	
+	youtube_timer = ()
+	try:
+		youtube_timer = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
+	except:
+		youtube_timer = ("NaN", "NaN")
+
 	# TWC tests, first using "net-score" feather test, then using Speedtest CLI
-	twc_timer = server_test(twc_host, twc_path_late, twc_path_thr, TIMEOUT, TEST_LENGTH)
-	twc_speed = speedtest("999");
+	twc_timer = ()
+	twc_speed = ()
+	try:
+		twc_timer = server_test(twc_host, twc_path_late, twc_path_thr, TIMEOUT, TEST_LENGTH)
+	except:
+		twc_timer = ("NaN", "NaN")
+	try:
+		twc_speed = speedtest("999");
+	except:
+		twc_speed = ("NaN", "NaN", "NaN")
 
 	# Tranquil hosting tests, first using "net-score" feather test, then using Speedtest CLI
-	tran_timer = server_test(tran_host, tran_path_late, tran_path_thr, TIMEOUT, TEST_LENGTH)
-	tran_speed = speedtest("544")
+	tran_timer = ()
+	tran_speed = ()
+	try:
+		tran_timer = server_test(tran_host, tran_path_late, tran_path_thr, TIMEOUT, TEST_LENGTH)
+	except:
+		tran_timer = ("Nan", "Nan")
+	try:
+		tran_speed = speedtest("544")
+	except:
+		tran_speed = ("NaN", "NaN", "NaN")
 
 	# Generate data to be written to CSV file
 	timestamp = time.time()
