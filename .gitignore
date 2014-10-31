@@ -3,3 +3,4 @@ data/
 Wireshark/
 .ipynb_checkpoints/
 go/
+tmp/

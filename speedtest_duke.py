@@ -13,6 +13,18 @@
 # Number of clients with that ASN on Y 
 # TD_ASN file joined with TD file based on TEST Key field
 # 	Maybe dump them into a sqldb and use some joins?
+# 	
+# Why use multithreaded sockets/HTTP instead of single threaded HTTP?
+# 	Bad for consumers, good for customers?
+# 	Need to quantify the fact that it is less representative
+# 	YouTube example?
+# 	
+# Latency w/ and w/o IO time
+# Add Duke data
+# Manual testing on the web server
+# 2 hours, for 2 days - 4 hours, 16 data points
+# Plot latencies to all three servers on same graph
+# 	Well, mainly TWC timer and YT timer
 
 import datetime
 import urllib2
@@ -92,19 +104,24 @@ def write_to_log(data, fileName):
 # 	conn: connection object, in the form of a HTTPConnection
 # 	PATH: path to a resource on the host
 # 	N: number of times to run the test to get averages
+# 	
+# Fix: Do not read response as well
 def timer_test(conn, PATH, N):
 	r_times = list()
+	preIO_times = list()
 	for i in xrange(0, N):
 		start_wall = time.time()
 		resource = "%s?to=%d&i=%d" % (PATH, start_wall, i)
 		conn.request("GET", resource, headers=header_list)
 		resp = conn.getresponse()
+		preIO = time.time()
 		data = resp.read()
 		end_wall = time.time()
 		r_times.append(end_wall - start_wall)
+		preIO_times.append(preIO - start_wall)
 		if resp.status < 200 or resp.status > 206:
 			print "NOT OK %d (%s)" % (resp.status, resource)
-	return r_times
+	return (r_times, preIO_times)
 
 # server_test() -> abstraction for calculating mean latency and throughput values for
 # a connection to a host
@@ -135,19 +152,20 @@ def server_test(host, path_late, path_thr, to, test_length):
 	thr_times = timer_test(conn, path_thr, test_length)
 
 	# Calculate averaged RTT and size in bits
-	mean_rtt = sum(late_times) / len(late_times)
+	mean_rtt = sum(late_times[0]) / len(late_times[0])
+	mean_preIO_rtt = sum(late_times[1]) / len(late_times[1])
 	thr_bits = sz_thr * 8 / 1000000.0
 
 	thrs = list()
 
 	# Calculate mean throughput
 	for i in xrange(0, test_length):
-		rtt = late_times[i]*1000
+		rtt = late_times[0][i]*1000
 		thr = thr_bits / (thr_times[i] - mean_rtt)
 		thrs.append(thr)
 	mean_thr = sum(thrs) / len(thrs)
 
-	return ((mean_rtt * 1000), mean_thr)
+	return ((mean_rtt * 1000), (mean_preIO_rtt * 1000), mean_thr)
 
 # main() -> executes specific tests
 def main():
@@ -197,21 +215,21 @@ def main():
 		twc_speed = ("NaN", "NaN", "NaN")
 
 	# Tranquil hosting tests, first using "net-score" feather test, then using Speedtest CLI
-	tran_timer = ()
-	tran_speed = ()
-	try:
-		tran_timer = server_test(tran_host, tran_path_late, tran_path_thr, TIMEOUT, TEST_LENGTH)
-	except:
-		tran_timer = ("Nan", "Nan")
-	try:
-		tran_speed = speedtest("544")
-	except:
-		tran_speed = ("NaN", "NaN", "NaN")
+	# tran_timer = ()
+	# tran_speed = ()
+	# try:
+	# 	tran_timer = server_test(tran_host, tran_path_late, tran_path_thr, TIMEOUT, TEST_LENGTH)
+	# except:
+	# 	tran_timer = ("Nan", "Nan")
+	# try:
+	# 	tran_speed = speedtest("544")
+	# except:
+	# 	tran_speed = ("NaN", "NaN", "NaN")
 
 	duke_timer = ()
 	duke_speed = ()
 	try:
-		duke_timer = server_test(duke_host, duke_path_late, duke_path_thr)
+		duke_timer = server_test(duke_host, duke_path_late, duke_path_thr, TIMEOUT, TEST_LENGTH)
 	except:
 		duke_timer = ("NaN", "NaN")
 	try:
@@ -224,21 +242,24 @@ def main():
 	dataString = ( datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), # Timestamp for entire test
 		       	"YT" + str(timestamp), # YouTube server test ID ("net-score" test)
 		        youtube_timer[0], # Latency
-		        youtube_timer[1], # Throughput
+		        youtube_timer[1], # PreIO latency
+		        youtube_timer[2], # Throughput
 		        "TWC_timer" + str(timestamp), # TWC server test ID ("net-score" test)
 		        twc_timer[0], # Latency
-		        twc_timer[1], # Throughput
+		        twc_timer[1], # PreIO latency
+		        twc_timer[2], # Throughput
 		        "TWC_speed" + str(timestamp), # TWC speedtest-cli test ID
 		        twc_speed[0], # Latency
 		        twc_speed[1], # Download speed
 		        twc_speed[2], # Upload speed
-		        "Tran_timer" + str(timestamp), # Tranquil server test ID ("net-score" test)
-		        tran_timer[0], # Latency
-		        tran_timer[1], # Throughput
-		        "Tran_speed" + str(timestamp), # Tranquil speedtest-cli test ID
-		        tran_speed[0], # Latency
-		        tran_speed[1], # Download speed
-		        tran_speed[2] )# Upload speed
+		        "Duke_timer" + str(timestamp), # Duke server test ID ("net-score" test)
+		        duke_timer[0], # Latency
+		        duke_timer[1], # PreIO latency
+		        duke_timer[2], # Throughput
+		        "Duke_speed" + str(timestamp), # Duke speedtest-cli test ID
+		        duke_speed[0], # Latency
+		        duke_speed[1], # Download speed
+		        duke_speed[2] )# Upload speed
 	#log_name = "data/" + str(timestamp).split('.')[0] + "_log.txt" # Log file with timestamp
 	log_name = "data/results_log.csv"
 	log_file = os.path.abspath(log_name)
