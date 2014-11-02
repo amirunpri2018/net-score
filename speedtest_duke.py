@@ -148,23 +148,26 @@ def server_test(host, path_late, path_thr, to, test_length):
 	sz_thr = len(imgB)
 
 	# Grab times for each
-	late_times = timer_test(conn, path_late, test_length)
+	lates = timer_test(conn, path_late, test_length)
+	late_times = lates[0]
+	preIO_times = lates[1]
 	thr_times = timer_test(conn, path_thr, test_length)
 
 	# Calculate averaged RTT and size in bits
-	mean_rtt = sum(late_times[0]) / len(late_times[0])
-	mean_preIO_rtt = sum(late_times[1]) / len(late_times[1])
+	mean_rtt = sum(late_times) / len(late_times)
+	mean_preIO_rtt = sum(preIO_times) / len(preIO_times)
 	thr_bits = sz_thr * 8 / 1000000.0
 
 	thrs = list()
 
 	# Calculate mean throughput
 	for i in xrange(0, test_length):
-		rtt = late_times[0][i]*1000
+		rtt = late_times[i]*1000
 		thr = thr_bits / (thr_times[i] - mean_rtt)
 		thrs.append(thr)
 	mean_thr = sum(thrs) / len(thrs)
 
+	print ((mean_rtt * 1000), (mean_preIO_rtt * 1000), mean_thr)
 	return ((mean_rtt * 1000), (mean_preIO_rtt * 1000), mean_thr)
 
 # main() -> executes specific tests
@@ -197,10 +200,8 @@ def main():
 
 	# "Net-score" feather test
 	youtube_timer = ()
-	try:
-		youtube_timer = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
-	except:
-		youtube_timer = ("NaN", "NaN")
+	youtube_timer = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
+	youtube_timer = ("NaN", "NaN", "NaN")
 
 	# TWC tests, first using "net-score" feather test, then using Speedtest CLI
 	twc_timer = ()
