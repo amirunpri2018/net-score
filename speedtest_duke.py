@@ -3,16 +3,6 @@
 # Script written by James Martin, for the net-score project
 # Contact: jamesml@cs.unc.edu, jasleen@cs.unc.edu, gavaletz@cs.unc.edu
 # In collaboration with Jasleen Kaur and Eric Gavaletz
-# 
-# TODO: 
-# Use Eric's script and grep on HTTPHDR / follow instructions
-# Double check that python is caching connections and not opening entire new ones
-# 	Python library may not be low level enough
-# Start to look at:
-# ASN number on X axis
-# Number of clients with that ASN on Y 
-# TD_ASN file joined with TD file based on TEST Key field
-# 	Maybe dump them into a sqldb and use some joins?
 # 	
 # Why use multithreaded sockets/HTTP instead of single threaded HTTP?
 # 	Bad for consumers, good for customers?
@@ -150,12 +140,16 @@ def server_test(host, path_late, path_thr, to, test_length):
 	# Grab times for each
 	lates = timer_test(conn, path_late, test_length)
 	late_times = lates[0]
+	#print "Raw latency: ", late_times
 	preIO_times = lates[1]
-	thr_times = timer_test(conn, path_thr, test_length)
+	#print "PreIO latency: ", preIO_times
+	thr_times = timer_test(conn, path_thr, test_length)[0]
 
 	# Calculate averaged RTT and size in bits
 	mean_rtt = sum(late_times) / len(late_times)
+	print "Mean rtt: ", mean_rtt
 	mean_preIO_rtt = sum(preIO_times) / len(preIO_times)
+	print "Mean PreIO rtt: ", mean_preIO_rtt
 	thr_bits = sz_thr * 8 / 1000000.0
 
 	thrs = list()
@@ -167,7 +161,7 @@ def server_test(host, path_late, path_thr, to, test_length):
 		thrs.append(thr)
 	mean_thr = sum(thrs) / len(thrs)
 
-	print ((mean_rtt * 1000), (mean_preIO_rtt * 1000), mean_thr)
+	#print ((mean_rtt * 1000), (mean_preIO_rtt * 1000), mean_thr)
 	return ((mean_rtt * 1000), (mean_preIO_rtt * 1000), mean_thr)
 
 # main() -> executes specific tests
@@ -184,9 +178,9 @@ def main():
 
 	# Path information to the Tranquil Hosting Speedtest server
 	# Speedtest ID: 544
-	tran_host = "speedtest.ral.tqhosting.com"
-	tran_path_late = "/speedtest/latency.txt"
-	tran_path_thr = "/speedtest/random500x500.jpg"
+	# tran_host = "speedtest.ral.tqhosting.com"
+	# tran_path_late = "/speedtest/latency.txt"
+	# tran_path_thr = "/speedtest/random500x500.jpg"
 
 	# Path information to the Duke Speedtest server
 	# Speedtest ID: 4185
@@ -262,7 +256,7 @@ def main():
 		        duke_speed[1], # Download speed
 		        duke_speed[2] )# Upload speed
 	#log_name = "data/" + str(timestamp).split('.')[0] + "_log.txt" # Log file with timestamp
-	log_name = "data/results_log.csv"
+	log_name = "/playpen/net-score-data/jamesml/net-score/data/results_log.csv"
 	log_file = os.path.abspath(log_name)
 	write_to_log(dataString, log_file)
 
