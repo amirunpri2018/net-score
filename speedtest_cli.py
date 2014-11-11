@@ -424,6 +424,7 @@ def getBestServer(servers):
             else:
                 cum.append(3600)
             h.close()
+        # One way latency
         avg = round((sum(cum) / 6) * 1000, 3)
         results[avg] = server
     fastest = sorted(results.keys())[0]

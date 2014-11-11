@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#/usr/bin/python2.7
 
 # Script written by James Martin, for the net-score project
 # Contact: jamesml@cs.unc.edu, jasleen@cs.unc.edu, gavaletz@cs.unc.edu
@@ -31,7 +31,7 @@ header_list = {'User-Agent': 'python-%s.%s' % ('net-lib', '0.1')}
 # 				(assigned by the speedtest-cli)
 def speedtest(serverID):
 	# NOTE: may need to specify absolute path to the speedtest-cli script
-	full_path = os.path.abspath("speedtest-cli/speedtest_cli.py")
+	full_path = os.path.abspath("/playpen/net-score-data/jamesml/net-score/speedtest-cli/speedtest_cli.py")
 	p = subprocess.Popen(["python", full_path, "--simple", "--server", serverID],stdout=subprocess.PIPE)
 	out, err = p.communicate()
 
@@ -84,7 +84,7 @@ def write_to_log(data, fileName):
 			logString = logString + str(data[i]) + ","
 		else:
 			logString = logString + str(data[i]) + "\n"
-	with open(fileName, "w") as log:
+	with open(fileName, "a") as log:
 		log.write(logString)
 		log.flush()
 
@@ -186,7 +186,7 @@ def main():
 	# Speedtest ID: 4185
 	# http://speedtest.oit.duke.edu/speedtest/upload.php
 	duke_host = "speedtest.oit.duke.edu"
-	duke_path_late = "/speedtest/upload.php"
+	duke_path_late = "/speedtest/latency.txt"
 	duke_path_thr = "/speedtest/random500x500.jpg"
 
 	TIMEOUT = 10
@@ -194,8 +194,10 @@ def main():
 
 	# "Net-score" feather test
 	youtube_timer = ()
-	youtube_timer = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
-	youtube_timer = ("NaN", "NaN", "NaN")
+	try:
+		youtube_timer = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
+	except:
+		youtube_timer = ("NaN", "NaN", "NaN")
 
 	# TWC tests, first using "net-score" feather test, then using Speedtest CLI
 	twc_timer = ()
