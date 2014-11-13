@@ -31,8 +31,9 @@ header_list = {'User-Agent': 'python-%s.%s' % ('net-lib', '0.1')}
 # 				(assigned by the speedtest-cli)
 def speedtest(serverID):
 	# NOTE: may need to specify absolute path to the speedtest-cli script
-	full_path = os.path.abspath("/playpen/net-score-data/jamesml/net-score/speedtest-cli/speedtest_cli.py")
-	p = subprocess.Popen(["python", full_path, "--simple", "--server", serverID],stdout=subprocess.PIPE)
+	server_full_path = os.path.abspath("/playpen/net-score-data/jamesml/net-score/speedtest-cli/speedtest_cli.py")
+	local_full_path = os.path.abspath("speedtest-cli/speedtest_cli.py")
+	p = subprocess.Popen(["python", local_full_path, "--simple", "--server", serverID],stdout=subprocess.PIPE)
 	out, err = p.communicate()
 
 	stats = []
@@ -147,9 +148,9 @@ def server_test(host, path_late, path_thr, to, test_length):
 
 	# Calculate averaged RTT and size in bits
 	mean_rtt = sum(late_times) / len(late_times)
-	print "Mean rtt: ", mean_rtt
+	#print "Mean rtt: ", mean_rtt
 	mean_preIO_rtt = sum(preIO_times) / len(preIO_times)
-	print "Mean PreIO rtt: ", mean_preIO_rtt
+	#print "Mean PreIO rtt: ", mean_preIO_rtt
 	thr_bits = sz_thr * 8 / 1000000.0
 
 	thrs = list()
@@ -258,8 +259,9 @@ def main():
 		        duke_speed[1], # Download speed
 		        duke_speed[2] )# Upload speed
 	#log_name = "data/" + str(timestamp).split('.')[0] + "_log.txt" # Log file with timestamp
-	log_name = "/playpen/net-score-data/jamesml/net-score/data/results_log.csv"
-	log_file = os.path.abspath(log_name)
+	server_log_name = "/playpen/net-score-data/jamesml/net-score/data/results_log.csv"
+	local_log_name = "data/local_results.csv"
+	log_file = os.path.abspath(local_log_name)
 	write_to_log(dataString, log_file)
 
 # END main()
