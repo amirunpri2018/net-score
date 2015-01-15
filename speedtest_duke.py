@@ -1,4 +1,4 @@
-#/usr/bin/python2.7
+#!/usr/bin/python2.7
 
 # Script written by James Martin, for the net-score project
 # Contact: jamesml@cs.unc.edu, jasleen@cs.unc.edu, gavaletz@cs.unc.edu
@@ -54,10 +54,8 @@ def speedtest(serverID):
 			ntuple = (err)
 			return ntuple
 
-		counter = 0
 		for word in stats:
 			word.split(':')
-			counter+=1
 
 		counter = 0
 		for word in stats:
@@ -193,7 +191,7 @@ def main():
 	TIMEOUT = 10
 	TEST_LENGTH = 100
 
-	# "Net-score" feather test
+	# "Net-score" feather test, replicate tool's test
 	youtube_timer = ()
 	try:
 		youtube_timer = server_test(yt_host, yt_path_late, yt_path_thr, TIMEOUT, TEST_LENGTH)
@@ -260,8 +258,8 @@ def main():
 		        duke_speed[2] )# Upload speed
 	#log_name = "data/" + str(timestamp).split('.')[0] + "_log.txt" # Log file with timestamp
 	server_log_name = "/playpen/net-score-data/jamesml/net-score/data/results_log.csv"
-	local_log_name = "data/local_results.csv"
-	log_file = os.path.abspath(local_log_name)
+	#local_log_name = "data/local_results.csv"
+	#log_file = os.path.abspath(local_log_name)
 	write_to_log(dataString, log_file)
 
 # END main()
